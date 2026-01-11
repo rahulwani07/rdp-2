@@ -1,0 +1,27 @@
+name: High Speed GitHub RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Enable RDP
+        run: |
+          net user runneradmin P@ssw0rd123 /add
+          net localgroup administrators runneradmin /add
+          reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+          netsh advfirewall firewall set rule group="remote desktop" new enable=yes
+
+      - name: Download Ngrok (Fast Tunnel)
+        run: |
+          Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+          Expand-Archive ngrok.zip
+
+      - name: Start Ngrok TCP Tunnel
+        run: |
+          ngrok\ngrok.exe config add-authtoken YOUR_NGROK_TOKEN
+          ngrok\ngrok.exe tcp 3389
